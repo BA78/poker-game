@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포커 게임</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- 게임 헤더 -->
+        <header class="game-header">
+            <h1>포커 게임</h1>
+            <div class="game-controls">
+                <button onclick="location.href='/play/human'" class="btn">플레이어 간 대전</button>
+                <button onclick="location.href='/play/computer'" class="btn">컴퓨터와 대전</button>
+            </div>
+        </header>
+
+        <!-- 게임 상태 -->
+        {% if current_turn is not none %}
+        <div class="game-status">
+            <h2>게임 진행 상황</h2>
+            <p class="turn-info">현재 턴: {{ current_turn }} / {{ max_turns }}</p>
+            <div class="game-buttons">
+                <button onclick="location.href='/start'" class="btn">게임 시작</button>
+                <button onclick="location.href='/'" class="btn">게임 종료</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 플레이어 카드 및 점수 -->
+        {% if players %}
+        <div class="game-area">
+            {% for player, cards in players.items() %}
+            <div class="player-section">
+                <h3>{{ player }}</h3>
+                <div class="cards-container">
+                    {% for card in cards %}
+                    <div class="card {% if player == 'Player 1' %}selectable{% endif %}" 
+                         data-index="{{ loop.index0 }}"
+                         data-player="{{ player }}">
+                        <div class="card-inner">
+                            <div class="rank">{{ card['rank'] }}</div>
+                            <div class="suit {{ card['suit']|lower }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="score-info">
+                    <p>족보: {{ scores[player][1] }}</p>
+                    <p>점수 계산: {{ scores[player][2] }} × {{ scores[player][3] }} = {{ scores[player][0] }}</p>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="game-controls">
+                <form id="discardForm" method="post" action="/discard">
+                    <input type="hidden" id="discardInput" name="discard">
+                    <button type="button" onclick="submitDiscard()" class="btn">카드 버리기</button>
+                </form>
+                <button onclick="location.href='/next_turn'" class="btn">턴 넘기기</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 게임 결과 -->
+        {% if winner is not none %}
+        <div class="game-result">
+            <h2>게임 결과</h2>
+            <p class="winner">승자: {{ winner }}</p>
+        </div>
+        {% endif %}
+
+        <!-- 족보 배율표 -->
+        <div class="hand-rankings">
+            <h3>족보 배율표</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>족보</th>
+                        <th>배율</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hand_type, multiplier in {
+                        'Royal Flush': 10,
+                        'Straight Flush': 9,
+                        'Four of a Kind': 8,
+                        'Full House': 7,
+                        'Straight': 6,
+                        'Flush': 5,
+                        'Three of a Kind': 4,
+                        'Two Pair': 3,
+                        'Pair': 2,
+                        'High Card': 1
+                    }.items() %}
+                    <tr>
+                        <td>{{ hand_type }}</td>
+                        <td>{{ multiplier }}배</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

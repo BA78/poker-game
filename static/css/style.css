@@ -1,0 +1,193 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+}
+
+.hand-rankings {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 200px;
+    background: #f9f9f9;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.card {
+    display: inline-block;
+    width: 50px;
+    height: 70px;
+    border: 1px solid #000;
+    margin: 5px;
+    text-align: center;
+    line-height: 70px;
+    cursor: pointer;
+}
+
+.card {
+    display: inline-block;
+    width: 60px;
+    height: 90px;
+    margin: 5px;
+    padding: 5px;
+    border: 2px solid black;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+.selected {
+    border-color: red;
+}
+.rank {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-weight: bold;
+}
+.suit {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 20px;
+}
+.hearts::after {
+    content: '♥';
+    color: red;
+}
+.diamonds::after {
+    content: '♦';
+    color: red;
+}
+.clubs::after {
+    content: '♣';
+    color: black;
+}
+.spades::after {
+    content: '♠';
+    color: black;
+}
+
+/* 전체 레이아웃 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    gap: 20px;
+}
+
+/* 게임 헤더 */
+.game-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* 카드 스타일링 */
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.card {
+    width: 70px;
+    height: 100px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    position: relative;
+    background: white;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.card.selected {
+    transform: translateY(-10px);
+    border-color: #007bff;
+}
+
+.card-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* 족보 배율표 */
+.hand-rankings {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hand-rankings table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.hand-rankings th,
+.hand-rankings td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+/* 게임 컨트롤 */
+.game-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn:hover {
+    background: #0056b3;
+}
+
+/* 점수 정보 */
+.score-info {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* 게임 결과 */
+.game-result {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.winner {
+    font-size: 1.2em;
+    color: #28a745;
+} 

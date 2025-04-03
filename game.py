@@ -305,12 +305,24 @@ class HandAnalyzer:
         self.sorted_ranks = sorted(RANK_VALUES[rank] for rank in self.rank_count.keys())
 
     def analyze(self) -> Tuple[int, str, int, int]:
-        for hand_type, multiplier in HAND_RANKINGS.items():
-            if hasattr(self, f'is_{hand_type.lower().replace(" ", "_")}'):
-                check_method = getattr(self, f'is_{hand_type.lower().replace(" ", "_")}')
-                if check_method():
-                    return (self.total_rank_value * multiplier, hand_type, 
-                           self.total_rank_value, multiplier)
+        # 족보 판정 순서를 명시적으로 지정
+        hand_checks = [
+            ('Royal Flush', 10),
+            ('Straight Flush', 9),
+            ('Four of a Kind', 8),
+            ('Full House', 7),
+            ('Flush', 6),
+            ('Straight', 5),
+            ('Three of a Kind', 4),
+            ('Two Pair', 3),
+            ('Pair', 2)
+        ]
+
+        for hand_type, multiplier in hand_checks:
+            check_method = getattr(self, f'is_{hand_type.lower().replace(" ", "_")}')
+            if check_method():
+                return (self.total_rank_value * multiplier, hand_type, 
+                       self.total_rank_value, multiplier)
         
         return (self.total_rank_value, 'High Card', self.total_rank_value, 1)
 

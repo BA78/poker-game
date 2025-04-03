@@ -1,0 +1,10 @@
+[33mef3a9a2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m 포커 게임 UI/UX 개선: 카드 디자인, 족보표 팝업, 족보 하이라이트 기능 추가
+[33m73b8699[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: 카드 교체 후 점수 계산 로직 수정 - 현재 보유한 카드로 항상 새로운 점수 계산하도록 수정
+[33m2471016[m feat: 컴퓨터 AI 개선 및 카드 변경 표시 기능 추가
+[33m756b541[m feat: 카드 디자인 개선 및 레이아웃 수정
+[33m5a037f8[m chore: requirements.txt 추가
+[33mb260931[m chore: .gitignore 파일 추가
+[33m89df8a0[m 포커 게임 리팩토링: 코드 구조 개선, 족보 판정 로직 수정, UI/UX 개선
+[33m59d0b44[m Merge branch 'main' of https://github.com/BA78/poker-game
+[33m1d28114[m[33m ([m[1;32mmaster[m[33m)[m Initial commit
+[33m58812a7[m Initial commit

@@ -21,11 +21,21 @@
         {% if current_turn is not none %}
         <div class="game-status">
             <h2>게임 진행 상황</h2>
-            <p class="turn-info">현재 턴: {{ current_turn }} / {{ max_turns }}</p>
-            <div class="game-buttons">
-                <button onclick="location.href='/start'" class="btn">게임 시작</button>
-                <button onclick="location.href='/'" class="btn">게임 종료</button>
-            </div>
+            <p class="turn-info">{{ current_turn }} / {{ max_turns }}</p>
+        </div>
+
+        <!-- 버튼 영역을 여기로 이동 -->
+        <div class="game-controls">
+            {% if players %}
+                <form id="discardForm" method="post" action="/discard" class="control-button">
+                    <input type="hidden" id="discardInput" name="discard">
+                    <button type="button" onclick="submitDiscard()" class="btn">카드 버리기</button>
+                </form>
+                <button onclick="location.href='/next_turn'" class="btn control-button">턴 넘기기</button>
+            {% else %}
+                <button onclick="location.href='/start'" class="btn control-button">게임 시작</button>
+                <button onclick="location.href='/'" class="btn control-button">게임 종료</button>
+            {% endif %}
         </div>
         {% endif %}
 
@@ -37,10 +47,9 @@
                 <h3>{{ player }}</h3>
                 <div class="cards-container">
                     {% for card in cards %}
-                    <div class="card {% if player == 'Computer' %}computer{% endif %} {% if player == 'Player 1' %}selectable{% endif %}" 
+                    <div class="card {% if player == 'Player 1' %}selectable{% endif %}" 
                          data-index="{{ loop.index0 }}"
                          data-player="{{ player }}">
-                        {% if player != 'Computer' %}
                         <div class="card-inner">
                             {% if card['rank'] in ['2', '3', '4', '5', '6', '7', '8', '9', '10'] %}
                                 <!-- 숫자 카드 -->
@@ -77,24 +86,35 @@
                                 </div>
                             {% endif %}
                         </div>
-                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
                 <div class="score-info">
                     <p>족보: {{ scores[player][1] }}</p>
                     <p>점수 계산: {{ scores[player][2] }} × {{ scores[player][3] }} = {{ scores[player][0] }}</p>
+                    {% if player == 'Computer' and current_turn and current_turn > 1 %}
+                        <p class="ai-decision">
+                            {% if previous_scores and (
+                                previous_scores['Computer'][0] != scores['Computer'][0] or
+                                previous_scores['Computer'][1] != scores['Computer'][1] or
+                                previous_scores['Computer'][2] != scores['Computer'][2] or
+                                previous_scores['Computer'][3] != scores['Computer'][3]
+                            ) %}
+                                <span class="action-taken">
+                                    컴퓨터가 카드를 교체했습니다:<br>
+                                    <span class="score-change-details">
+                                        이전 족보: {{ previous_scores['Computer'][1] }} ({{ previous_scores['Computer'][0] }}점)<br>
+                                        현재 족보: {{ scores['Computer'][1] }} ({{ scores['Computer'][0] }}점)
+                                    </span>
+                                </span>
+                            {% else %}
+                                <span class="action-kept">컴퓨터가 카드를 유지했습니다</span>
+                            {% endif %}
+                        </p>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
-
-            <div class="game-controls">
-                <form id="discardForm" method="post" action="/discard">
-                    <input type="hidden" id="discardInput" name="discard">
-                    <button type="button" onclick="submitDiscard()" class="btn">카드 버리기</button>
-                </form>
-                <button onclick="location.href='/next_turn'" class="btn">턴 넘기기</button>
-            </div>
         </div>
         {% endif %}
 

@@ -10,6 +10,135 @@ class Card:
     def to_dict(self) -> dict:
         return {'suit': self.suit, 'rank': self.rank}
 
+class PokerAI:
+    def __init__(self, hand, deck):
+        self.hand = hand
+        self.deck = deck
+        self.current_score = None
+        self.current_hand_type = None
+        self.current_multiplier = None
+
+    def analyze_hand(self):
+        """현재 패 분석"""
+        hand_analyzer = HandAnalyzer(self.hand)
+        score, hand_type, total_value, multiplier = hand_analyzer.analyze()
+        self.current_score = score
+        self.current_hand_type = hand_type
+        self.current_multiplier = multiplier
+        return hand_type, multiplier
+
+    def find_best_hand_potential(self):
+        """현재 패의 잠재력 분석"""
+        rank_count = {}
+        suit_count = {}
+        
+        for card in self.hand:
+            rank = card['rank']
+            suit = card['suit']
+            rank_count[rank] = rank_count.get(rank, 0) + 1
+            suit_count[suit] = suit_count.get(suit, 0) + 1
+
+        # 플러시 가능성 체크
+        flush_potential = max(suit_count.values()) >= 4
+
+        # 스트레이트 가능성 체크
+        ranks = [RANK_VALUES[card['rank']] for card in self.hand]
+        ranks.sort()
+        straight_potential = False
+        for i in range(len(ranks) - 3):
+            if ranks[i+3] - ranks[i] <= 4:
+                straight_potential = True
+                break
+
+        return {
+            'pairs': len([count for count in rank_count.values() if count == 2]),
+            'three_of_kind': any(count >= 3 for count in rank_count.values()),
+            'flush_potential': flush_potential,
+            'straight_potential': straight_potential
+        }
+
+    def decide_cards_to_discard(self):
+        """버릴 카드 결정"""
+        hand_type, multiplier = self.analyze_hand()
+        potential = self.find_best_hand_potential()
+        cards_to_discard = []
+
+        # 로얄 스트레이트 플러시나 스트레이트 플러시인 경우만 카드를 유지
+        if multiplier >= 9:
+            return []
+
+        # 포카드인 경우 나머지 한 장 교체
+        if multiplier == 8:  # Four of a Kind
+            rank_count = {}
+            for card in self.hand:
+                rank_count[card['rank']] = rank_count.get(card['rank'], 0) + 1
+            four_rank = next(rank for rank, count in rank_count.items() if count == 4)
+            return [card for card in self.hand if card['rank'] != four_rank]
+
+        # 플러시에 가까운 경우
+        if potential['flush_potential']:
+            main_suit = max(((suit, sum(1 for card in self.hand if card['suit'] == suit))
+                           for suit in set(card['suit'] for card in self.hand)),
+                          key=lambda x: x[1])[0]
+            cards_to_discard = [card for card in self.hand if card['suit'] != main_suit]
+            return cards_to_discard
+
+        # 스트레이트에 가까운 경우
+        if potential['straight_potential']:
+            ranks = sorted([RANK_VALUES[card['rank']] for card in self.hand])
+            consecutive = self._find_consecutive_ranks(ranks)
+            cards_to_discard = [card for card in self.hand 
+                              if RANK_VALUES[card['rank']] not in consecutive]
+            return cards_to_discard
+
+        # 트리플이 있는 경우
+        if potential['three_of_kind']:
+            rank_count = {}
+            for card in self.hand:
+                rank_count[card['rank']] = rank_count.get(card['rank'], 0) + 1
+            triple_rank = next(rank for rank, count in rank_count.items() if count >= 3)
+            return [card for card in self.hand if card['rank'] != triple_rank]
+
+        # 투페어가 있는 경우
+        if potential['pairs'] >= 2:
+            rank_count = {}
+            for card in self.hand:
+                rank_count[card['rank']] = rank_count.get(card['rank'], 0) + 1
+            pair_ranks = [rank for rank, count in rank_count.items() if count == 2]
+            return [card for card in self.hand if card['rank'] not in pair_ranks]
+
+        # 원페어가 있는 경우
+        if potential['pairs'] == 1:
+            rank_count = {}
+            for card in self.hand:
+                rank_count[card['rank']] = rank_count.get(card['rank'], 0) + 1
+            pair_rank = next(rank for rank, count in rank_count.items() if count == 2)
+            return [card for card in self.hand if card['rank'] != pair_rank]
+
+        # 아무것도 없는 경우, 가장 높은 카드 하나만 남기고 모두 교체
+        sorted_hand = sorted(self.hand, 
+                           key=lambda x: RANK_VALUES[x['rank']], 
+                           reverse=True)
+        return sorted_hand[1:]
+
+    def _find_consecutive_ranks(self, ranks):
+        """연속된 숫자들 찾기"""
+        best_consecutive = []
+        current_consecutive = [ranks[0]]
+        
+        for i in range(1, len(ranks)):
+            if ranks[i] - ranks[i-1] <= 2:  # 2 이하의 차이는 연속으로 간주
+                current_consecutive.append(ranks[i])
+            else:
+                if len(current_consecutive) > len(best_consecutive):
+                    best_consecutive = current_consecutive[:]
+                current_consecutive = [ranks[i]]
+        
+        if len(current_consecutive) > len(best_consecutive):
+            best_consecutive = current_consecutive
+            
+        return best_consecutive
+
 class PokerGame:
     def __init__(self):
         self.reset_game()
@@ -18,6 +147,9 @@ class PokerGame:
         self.players = {}
         self.hands = {}
         self.scores = {}
+        self.previous_scores = {}  # 이전 턴의 점수를 저장
+        self.previous_hands = {}   # 이전 턴의 핸드를 저장
+        self.card_changes = {}     # 카드 변경 내역을 저장
         self.current_turn = None
         self.max_turns = MAX_TURNS
         self.winner = None
@@ -70,6 +202,9 @@ class PokerGame:
             if player == 'Computer':
                 continue
 
+            # 현재 점수와 족보 저장
+            current_score, current_hand_type, current_total_value, current_multiplier = self.scores[player]
+
             # 카드 교체
             new_cards = []
             for index in sorted(discard_indices, reverse=True):
@@ -84,8 +219,14 @@ class PokerGame:
                 reverse=True
             )
 
-            # 새로운 점수로 업데이트 (무조건 새로운 족보 적용)
-            self.scores[player] = self.calculate_score(hand)
+            # 새로운 점수 계산
+            new_score, new_hand_type, new_total_value, new_multiplier = self.calculate_score(hand)
+
+            # 더 높은 배율의 족보를 유지
+            if current_multiplier > new_multiplier:
+                self.scores[player] = (current_score, current_hand_type, current_total_value, current_multiplier)
+            else:
+                self.scores[player] = (new_score, new_hand_type, new_total_value, new_multiplier)
 
         self.next_turn()
 
@@ -100,8 +241,42 @@ class PokerGame:
     def next_turn(self) -> None:
         if self.current_turn < self.max_turns:
             self.current_turn += 1
+            
+            # 새로운 턴 시작 시 card_changes 초기화
+            self.card_changes = {}
+            
+            # 컴퓨터의 턴 처리
+            self._handle_computer_turn()
         else:
             self.determine_winner()
+
+    def _handle_computer_turn(self) -> None:
+        """컴퓨터의 턴 처리"""
+        # 현재 점수를 이전 점수로 저장
+        self.previous_scores = {
+            'Computer': self.scores['Computer'],
+            'Player 1': self.scores['Player 1']
+        }
+
+        computer_hand = self.hands['Computer']
+        ai = PokerAI(computer_hand, self.players['Computer'])
+        cards_to_discard = ai.decide_cards_to_discard()
+
+        if cards_to_discard:
+            # 선택된 카드 버리기
+            for card in cards_to_discard:
+                computer_hand.remove(card)
+                new_card = self.players['Computer'].pop()
+                computer_hand.append(new_card)
+
+            # 핸드 정렬
+            computer_hand.sort(
+                key=lambda card: (RANKS.index(card['rank']), SUITS.index(card['suit'])),
+                reverse=True
+            )
+
+            # 카드를 교체했다면 무조건 새로운 점수로 업데이트
+            self.scores['Computer'] = self.calculate_score(computer_hand)
 
     def determine_winner(self) -> None:
         player_score = self.scores['Player 1'][0]

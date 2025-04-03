@@ -37,13 +37,47 @@
                 <h3>{{ player }}</h3>
                 <div class="cards-container">
                     {% for card in cards %}
-                    <div class="card {% if player == 'Player 1' %}selectable{% endif %}" 
+                    <div class="card {% if player == 'Computer' %}computer{% endif %} {% if player == 'Player 1' %}selectable{% endif %}" 
                          data-index="{{ loop.index0 }}"
                          data-player="{{ player }}">
+                        {% if player != 'Computer' %}
                         <div class="card-inner">
-                            <div class="rank">{{ card['rank'] }}</div>
-                            <div class="suit {{ card['suit']|lower }}"></div>
+                            {% if card['rank'] in ['2', '3', '4', '5', '6', '7', '8', '9', '10'] %}
+                                <!-- 숫자 카드 -->
+                                <div class="card-top">
+                                    <div class="small-suit {{ card['suit']|lower }}"></div>
+                                </div>
+                                <div class="card-center">
+                                    <div class="big-number">{{ card['rank'] }}</div>
+                                </div>
+                                <div class="card-bottom">
+                                    <div class="small-suit {{ card['suit']|lower }}" style="transform: rotate(180deg);"></div>
+                                </div>
+                            {% elif card['rank'] == 'Ace' %}
+                                <!-- 에이스 카드 -->
+                                <div class="card-top">
+                                    <div class="small-text">A</div>
+                                </div>
+                                <div class="card-center">
+                                    <div class="big-suit {{ card['suit']|lower }}"></div>
+                                </div>
+                                <div class="card-bottom">
+                                    <div class="small-text" style="transform: rotate(180deg);">A</div>
+                                </div>
+                            {% else %}
+                                <!-- K, Q, J 카드 -->
+                                <div class="card-top">
+                                    <div class="small-suit {{ card['suit']|lower }}"></div>
+                                </div>
+                                <div class="card-center">
+                                    <div class="big-text">{{ card['rank'][0] }}</div>
+                                </div>
+                                <div class="card-bottom">
+                                    <div class="small-suit {{ card['suit']|lower }}" style="transform: rotate(180deg);"></div>
+                                </div>
+                            {% endif %}
                         </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>

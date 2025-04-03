@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from game import PokerGame
+from typing import List
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')

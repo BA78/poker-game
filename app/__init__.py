@@ -19,6 +19,10 @@ def create_app():
     # Jinja2 환경에 zip 함수 추가
     app.jinja_env.globals.update(zip=zip)
 
+    # 세션 설정
+    app.secret_key = os.urandom(24)
+    app.config['SESSION_TYPE'] = 'filesystem'
+
     # 라우트 등록
     from .routes import register_routes
     register_routes(app)

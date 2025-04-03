@@ -202,8 +202,8 @@ class PokerGame:
             if player == 'Computer':
                 continue
 
-            # 현재 점수와 족보 저장
-            current_score, current_hand_type, current_total_value, current_multiplier = self.scores[player]
+            # 현재 점수 저장 (이전 점수로)
+            self.previous_scores[player] = self.scores[player]
 
             # 카드 교체
             new_cards = []
@@ -219,14 +219,8 @@ class PokerGame:
                 reverse=True
             )
 
-            # 새로운 점수 계산
-            new_score, new_hand_type, new_total_value, new_multiplier = self.calculate_score(hand)
-
-            # 더 높은 배율의 족보를 유지
-            if current_multiplier > new_multiplier:
-                self.scores[player] = (current_score, current_hand_type, current_total_value, current_multiplier)
-            else:
-                self.scores[player] = (new_score, new_hand_type, new_total_value, new_multiplier)
+            # 새로운 점수로 업데이트 (이전 점수와 비교하지 않고 현재 카드의 점수를 사용)
+            self.scores[player] = self.calculate_score(hand)
 
         self.next_turn()
 

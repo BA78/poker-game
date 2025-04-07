@@ -17,9 +17,25 @@ body {
     text-align: center;
     margin-bottom: 30px;
     background: white;
-    padding: 20px;
+    padding: 1rem 2rem 20px;
+    border-bottom: 1px solid #ccc;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 2rem;
 }
 
 .game-header h1 {
@@ -255,6 +271,10 @@ body {
     font-weight: bold;
     color: #28a745;
     margin: 10px 0;
+}
+
+.hand-button {
+    margin-left: auto;
 }
 
 /* 족보 배율표 */

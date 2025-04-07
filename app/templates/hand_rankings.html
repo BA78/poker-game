@@ -1,0 +1,150 @@
+{% block content %}
+<!-- 족보 배율표 팝업 -->
+<div id="handRankingsPopup" class="popup">
+    <div class="popup-content">
+        <span class="close-button" onclick="hideHandRankings()">&times;</span>
+        <h3>족보 배율표</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>족보</th>
+                    <th>배율</th>
+                    <th>족보 예시</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Royal Flush</td>
+                    <td>10배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">10♥</span>
+                            <span class="card-example hearts">J♥</span>
+                            <span class="card-example hearts">Q♥</span>
+                            <span class="card-example hearts">K♥</span>
+                            <span class="card-example hearts">A♥</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Straight Flush</td>
+                    <td>9배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example spades">5♠</span>
+                            <span class="card-example spades">6♠</span>
+                            <span class="card-example spades">7♠</span>
+                            <span class="card-example spades">8♠</span>
+                            <span class="card-example spades">9♠</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Four of a Kind</td>
+                    <td>8배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">Q♥</span>
+                            <span class="card-example diamonds">Q♦</span>
+                            <span class="card-example clubs">Q♣</span>
+                            <span class="card-example spades">Q♠</span>
+                            <span class="card-example hearts">K♥</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Full House</td>
+                    <td>7배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">J♥</span>
+                            <span class="card-example diamonds">J♦</span>
+                            <span class="card-example spades">J♠</span>
+                            <span class="card-example hearts">9♥</span>
+                            <span class="card-example diamonds">9♦</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Flush</td>
+                    <td>6배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example diamonds">2♦</span>
+                            <span class="card-example diamonds">5♦</span>
+                            <span class="card-example diamonds">7♦</span>
+                            <span class="card-example diamonds">J♦</span>
+                            <span class="card-example diamonds">K♦</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Straight</td>
+                    <td>5배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">4♥</span>
+                            <span class="card-example diamonds">5♦</span>
+                            <span class="card-example clubs">6♣</span>
+                            <span class="card-example spades">7♠</span>
+                            <span class="card-example hearts">8♥</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Three of a Kind</td>
+                    <td>4배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">8♥</span>
+                            <span class="card-example diamonds">8♦</span>
+                            <span class="card-example spades">8♠</span>
+                            <span class="card-example hearts">3♥</span>
+                            <span class="card-example diamonds">K♦</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Two Pair</td>
+                    <td>3배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">7♥</span>
+                            <span class="card-example diamonds">7♦</span>
+                            <span class="card-example hearts">4♥</span>
+                            <span class="card-example spades">4♠</span>
+                            <span class="card-example clubs">A♣</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Pair</td>
+                    <td>2배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">J♥</span>
+                            <span class="card-example spades">J♠</span>
+                            <span class="card-example diamonds">2♦</span>
+                            <span class="card-example clubs">7♣</span>
+                            <span class="card-example hearts">K♥</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>High Card</td>
+                    <td>1배</td>
+                    <td>
+                        <div class="example-cards">
+                            <span class="card-example hearts">A♥</span>
+                            <span class="card-example diamonds">J♦</span>
+                            <span class="card-example clubs">8♣</span>
+                            <span class="card-example spades">6♠</span>
+                            <span class="card-example hearts">3♥</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

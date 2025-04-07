@@ -29,28 +29,25 @@ function toggleCardSelection(card) {
 
 // 카드 버리기 제출 함수
 function submitDiscard() {
-    document.getElementById('discardInput').value = selectedCards.join(',');
+    console.log("[디버깅] submitDiscard 함수 호출됨");
+    const selectedEls = document.querySelectorAll('.card.selectable.selected');
+    const indices = Array.from(selectedEls).map(card => card.dataset.index);
+    console.log("[디버깅] 선택된 카드 인덱스:", indices);
+
+    document.getElementById('discardInput').value = indices.join(',');
     document.getElementById('discardForm').submit();
-    
-    // 카드를 버린 후 하이라이트 갱신을 여러 번 시도
-    setTimeout(highlightHandCards, 500);  // 첫 번째 시도
-    setTimeout(highlightHandCards, 1000); // 두 번째 시도
-    setTimeout(highlightHandCards, 1500); // 세 번째 시도
 }
 
-// 카드 클릭 이벤트 리스너 등록
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.card.selectable');
-    cards.forEach(card => {
-        card.addEventListener('click', function() {
-            toggleCardSelection(this);
-        });
-    });
 
-    // 초기 족보 하이라이트 적용
-    setTimeout(highlightHandCards, 100);  // 약간의 지연 후 첫 적용
-    setTimeout(highlightHandCards, 500);  // 한번 더 시도
+
+// 카드 클릭 이벤트 리스너 등록
+document.addEventListener('click', function (e) {
+    const card = e.target.closest('.card.selectable');
+    if (card) {
+        toggleCardSelection(card);
+    }
 });
+
 
 // 페이지 로드 및 상태 변경시 하이라이트 갱신
 document.addEventListener('DOMContentLoaded', () => {
@@ -155,10 +152,13 @@ function highlightCardsForHand(cards, handInfo) {
     });
 
     const suits = cards.map(card => {
-        const suitClass = Array.from(card.querySelector('.small-suit').classList)
-            .find(cls => ['hearts', 'diamonds', 'spades', 'clubs'].includes(cls));
-        return suitClass;
+        const suitElement = card.querySelector('.small-suit');
+        return suitElement
+            ? Array.from(suitElement.classList).find(cls =>
+                ['hearts', 'diamonds', 'spades', 'clubs'].includes(cls))
+            : null;
     });
+    
 
     // 족보별 하이라이트할 카드 찾기
     let cardsToHighlight = [];

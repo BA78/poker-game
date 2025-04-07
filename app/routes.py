@@ -4,6 +4,8 @@
 from flask import render_template, request, redirect, url_for, session
 from .models.game import Game
 
+game = Game()
+
 def register_routes(app):
     """라우트 등록"""
     @app.route('/')

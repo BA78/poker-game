@@ -1,6 +1,8 @@
 // 선택된 카드 인덱스를 저장할 배열
 let selectedCards = [];
 
+const MAX_CARDS_TO_DISCARD = 5;
+
 // 카드 선택 토글 함수
 function toggleCardSelection(card) {
     if (card.dataset.player !== 'Player 1') return;
@@ -9,6 +11,12 @@ function toggleCardSelection(card) {
     const selectedIndex = selectedCards.indexOf(index);
     
     if (selectedIndex === -1) {
+        // 이미 최대 카드를 선택했는지 확인
+        if (selectedCards.length >= MAX_CARDS_TO_DISCARD) {
+            alert(`최대 ${MAX_CARDS_TO_DISCARD}장의 카드만 교체할 수 있습니다.`);
+            return;
+        }
+        
         selectedCards.push(index);
         card.classList.add('selected');
         // 선택 시 반짝임 효과 제거
@@ -25,20 +33,65 @@ function toggleCardSelection(card) {
             card.classList.add('hand-highlight');
         }
     }
+    
+    // 선택된 카드 수에 따라 UI 업데이트
+    updateCardSelectionUI();
+}
+
+// 카드 선택 UI 업데이트 함수
+function updateCardSelectionUI() {
+    const cardsSelectedText = document.getElementById('cardsSelectedText');
+    if (cardsSelectedText) {
+        cardsSelectedText.textContent = `선택된 카드: ${selectedCards.length}/${MAX_CARDS_TO_DISCARD}`;
+    }
+    
+    // 버튼 텍스트 업데이트
+    const discardButton = document.getElementById('discardButton');
+    if (discardButton) {
+        discardButton.textContent = `선택한 카드 교체 (${selectedCards.length}/${MAX_CARDS_TO_DISCARD})`;
+        discardButton.disabled = selectedCards.length === 0;
+    }
 }
 
 // 카드 버리기 제출 함수
 function submitDiscard() {
     console.log("[디버깅] submitDiscard 함수 호출됨");
     const selectedEls = document.querySelectorAll('.card.selectable.selected');
+    
+    // 선택된 카드가 없는 경우 알림 표시
+    if (selectedEls.length === 0) {
+        alert("교체할 카드를 선택하거나, 카드를 유지하려면 '턴 넘기기' 버튼을 클릭하세요.");
+        return;
+    }
+    
+    // 선택된 카드의 데이터 출력 (디버깅)
+    console.log("[디버깅] 선택된 카드 요소:", selectedEls);
+    
     const indices = Array.from(selectedEls).map(card => card.dataset.index);
     console.log("[디버깅] 선택된 카드 인덱스:", indices);
+    console.log("[디버깅] 전송될 데이터:", indices.join(','));
 
     document.getElementById('discardInput').value = indices.join(',');
-    document.getElementById('discardForm').submit();
+    
+    // 폼 유효성 검사
+    const form = document.getElementById('discardForm');
+    if (validateFormBeforeSubmit(form)) {
+        console.log("[디버깅] 폼 제출됨");
+        form.submit();
+    }
 }
 
-
+function validateFormBeforeSubmit(form) {
+    // CSRF 토큰 확인
+    const csrfToken = form.querySelector('input[name="csrf_token"]');
+    if (!csrfToken || !csrfToken.value) {
+        console.error("CSRF 토큰이 없습니다!");
+        location.reload();
+        return false;
+    }
+    
+    return true;
+}
 
 // 카드 클릭 이벤트 리스너 등록
 document.addEventListener('click', function (e) {
@@ -47,7 +100,6 @@ document.addEventListener('click', function (e) {
         toggleCardSelection(card);
     }
 });
-
 
 // 페이지 로드 및 상태 변경시 하이라이트 갱신
 document.addEventListener('DOMContentLoaded', () => {
@@ -141,25 +193,51 @@ function highlightHandCards() {
     });
 }
 
+// 개선된 카드 값 매핑 함수
+function getCardNumericValue(rank) {
+    if (rank === 'A' || rank === 'Ace') return 14;
+    if (rank === 'K' || rank === 'King') return 13;
+    if (rank === 'Q' || rank === 'Queen') return 12;
+    if (rank === 'J' || rank === 'Jack') return 11;
+    return parseInt(rank) || 0;
+}
+
 function highlightCardsForHand(cards, handInfo) {
     // 족보 정보에서 족보 타입 추출
     const handType = handInfo.split(': ')[1];
     if (!handType) return;
 
+    // 디버깅 로그 추가
+    console.log("하이라이트 함수 호출됨 - 족보 타입:", handType);
+    
+    // 랭크 및 무늬 추출 방식 개선
     const ranks = cards.map(card => {
-        const rankMatch = card.textContent.match(/\d+|[JQKA]/);
-        return rankMatch ? rankMatch[0] : '';
-    });
-
-    const suits = cards.map(card => {
-        const suitElement = card.querySelector('.small-suit');
-        return suitElement
-            ? Array.from(suitElement.classList).find(cls =>
-                ['hearts', 'diamonds', 'spades', 'clubs'].includes(cls))
-            : null;
+        // dataset에서 값을 가져오거나, 텍스트 콘텐츠에서 추출
+        if (card.dataset.rank) return card.dataset.rank;
+        
+        // 텍스트 콘텐츠에서 추출하는 대안 방법
+        const centerText = card.querySelector('.big-text, .big-number, .rank-top');
+        return centerText ? centerText.textContent.trim() : '';
     });
     
-
+    const suits = cards.map(card => {
+        // dataset에서 값을 가져오거나, 클래스에서 추출
+        if (card.dataset.suit) return card.dataset.suit;
+        
+        // 클래스에서 추출하는 대안 방법
+        const suitElement = card.querySelector('.small-suit');
+        if (suitElement) {
+            const suitClass = Array.from(suitElement.classList).find(cls => 
+                ['hearts', 'diamonds', 'spades', 'clubs'].includes(cls));
+            return suitClass ? suitClass.charAt(0).toUpperCase() + suitClass.slice(1) : '';
+        }
+        return '';
+    });
+    
+    // 디버깅 로그
+    console.log("카드 랭크:", ranks);
+    console.log("카드 무늬:", suits);
+    
     // 족보별 하이라이트할 카드 찾기
     let cardsToHighlight = [];
 
@@ -207,47 +285,71 @@ function highlightCardsForHand(cards, handInfo) {
             break;
 
         case 'Straight':
-            // 스트레이트의 경우 연속된 숫자 찾기
-            const sortedRanks = ranks.map(r => {
-                if (r === 'A') return 14;
-                if (r === 'K') return 13;
-                if (r === 'Q') return 12;
-                if (r === 'J') return 11;
-                return parseInt(r);
-            }).sort((a, b) => a - b);
-
+            // 스트레이트 개선된 로직
+            const numericRanks = ranks.map(r => getCardNumericValue(r));
+            
+            // 디버깅: 숫자화된 랭크 출력
+            console.log("숫자화된 랭크:", numericRanks);
+            
+            // 중복 제거 및 정렬
+            const uniqueRanks = [...new Set(numericRanks)].sort((a, b) => a - b);
+            
             // A-5 스트레이트 체크 (A를 1로 취급)
-            const hasAce = sortedRanks.includes(14);
-            if (hasAce) {
-                const lowStraight = [2, 3, 4, 5];
-                if (lowStraight.every(rank => sortedRanks.includes(rank))) {
-                    const straightValues = new Set([14, ...lowStraight]);
-                    cardsToHighlight = cards.filter((_, idx) => {
-                        const cardValue = ranks[idx] === 'A' ? 14 :
-                                        ranks[idx] === 'K' ? 13 :
-                                        ranks[idx] === 'Q' ? 12 :
-                                        ranks[idx] === 'J' ? 11 :
-                                        parseInt(ranks[idx]);
-                        return straightValues.has(cardValue);
-                    });
-                    break;
+            const hasAce = uniqueRanks.includes(14);
+            if (hasAce && uniqueRanks.includes(2) && 
+                uniqueRanks.includes(3) && uniqueRanks.includes(4) && 
+                uniqueRanks.includes(5)) {
+                const lowStraightValues = new Set([14, 2, 3, 4, 5]);
+                cardsToHighlight = cards.filter((_, idx) => {
+                    const cardValue = numericRanks[idx];
+                    return lowStraightValues.has(cardValue);
+                });
+                break;
+            }
+            
+            // 연속된 5개 이상의 카드 찾기 (개선된 알고리즘)
+            let maxLength = 0;
+            let straightSeq = [];
+            let currentSeq = [uniqueRanks[0]];
+            
+            for (let i = 1; i < uniqueRanks.length; i++) {
+                if (uniqueRanks[i] === uniqueRanks[i-1] + 1) {
+                    // 연속된 숫자
+                    currentSeq.push(uniqueRanks[i]);
+                } else {
+                    // 연속이 끊어짐
+                    if (currentSeq.length >= 5 && currentSeq.length > maxLength) {
+                        maxLength = currentSeq.length;
+                        straightSeq = [...currentSeq];
+                    }
+                    currentSeq = [uniqueRanks[i]];
                 }
             }
-
-            // 일반적인 스트레이트 체크
-            for (let i = 0; i <= sortedRanks.length - 5; i++) {
-                const consecutive = sortedRanks.slice(i, i + 5);
-                if (consecutive[4] - consecutive[0] === 4) {
-                    const straightValues = new Set(consecutive);
-                    cardsToHighlight = cards.filter((_, idx) => {
-                        const cardValue = ranks[idx] === 'A' ? 14 :
-                                        ranks[idx] === 'K' ? 13 :
-                                        ranks[idx] === 'Q' ? 12 :
-                                        ranks[idx] === 'J' ? 11 :
-                                        parseInt(ranks[idx]);
-                        return straightValues.has(cardValue);
-                    });
-                    break;
+            
+            // 마지막 시퀀스 확인
+            if (currentSeq.length >= 5 && currentSeq.length > maxLength) {
+                straightSeq = [...currentSeq];
+            }
+            
+            // 스트레이트가 있으면 해당 카드 하이라이트
+            if (straightSeq.length >= 5) {
+                const straightValues = new Set(straightSeq);
+                cardsToHighlight = cards.filter((_, idx) => {
+                    const cardValue = numericRanks[idx];
+                    return straightValues.has(cardValue);
+                });
+            } else {
+                // 연결된 카드가 정확히 5장은 아니지만 5장 이상인 경우의 스트레이트 찾기
+                for (let i = 0; i <= uniqueRanks.length - 5; i++) {
+                    const consecutive = uniqueRanks.slice(i, i + 5);
+                    if (consecutive[4] - consecutive[0] === 4) {
+                        const straightValues = new Set(consecutive);
+                        cardsToHighlight = cards.filter((_, idx) => {
+                            const cardValue = numericRanks[idx];
+                            return straightValues.has(cardValue);
+                        });
+                        break;
+                    }
                 }
             }
             break;
@@ -280,8 +382,10 @@ function highlightCardsForHand(cards, handInfo) {
             break;
     }
 
-    // 찾은 카드들에 하이라이트 효과 적용
+    // 더 많은 디버깅 정보 추가
+    console.log("하이라이트 대상 카드:", cardsToHighlight.length);
     cardsToHighlight.forEach(card => {
+        console.log("하이라이트 카드:", card.dataset.rank, card.dataset.suit);
         card.classList.add('hand-highlight');
     });
 }
@@ -309,4 +413,45 @@ document.addEventListener('click', function(event) {
     if (event.target === popup) {
         hideHandRankings();
     }
-}); 
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 게임 상태 확인
+    const winnerElement = document.querySelector('.winner');
+    
+    if (winnerElement) {
+        // 게임이 종료된 경우 모든 게임 관련 버튼 비활성화
+        const gameButtons = document.querySelectorAll('.game-controls .btn:not([href*="play_computer"])');
+        gameButtons.forEach(button => {
+            button.classList.add('disabled');
+            
+            // <a> 태그인 경우
+            if (button.tagName === 'A') {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('게임이 이미 종료되었습니다.');
+                });
+            } else {
+                // 버튼인 경우
+                button.disabled = true;
+            }
+        });
+    }
+});
+
+// AJAX POST 요청 예시
+function ajaxPost(url, data) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+} 

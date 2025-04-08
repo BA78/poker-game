@@ -444,4 +444,20 @@ body {
 .card.hand-highlight {
     animation: glowing 2s infinite;
     border: 2px solid gold;
+}
+
+/* app/static/css/style.css에 추가 */
+.cards-selected-counter {
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #0056b3;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    background-color: #cccccc;
 } 

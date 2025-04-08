@@ -22,14 +22,17 @@
     <!-- 플레이어 카드 및 점수 -->
     {% if hands %}
     <div class="game-area">
-        {% for player, cards in hands.items() %}
+        <!-- 플레이어 섹션을 항상 먼저 표시 -->
+        {% if 'Player 1' in hands %}
         <div class="player-section">
-            <h3>{{ player }}</h3>
+            <h3>Player 1</h3>
             <div class="cards-container">
-                {% for card in cards %}
-                <div class="card {% if player == 'Player 1' %}selectable{% endif %}" 
+                {% for card in hands['Player 1'] %}
+                <div class="card selectable" 
                      data-index="{{ loop.index0 }}"
-                     data-player="{{ player }}">
+                     data-player="Player 1"
+                     data-rank="{{ card['rank'] }}"
+                     data-suit="{{ card['suit'] }}">
                     <div class="card-inner">
                         {% if card['rank'] in ['2', '3', '4', '5', '6', '7', '8', '9', '10'] %}
                             <!-- 숫자 카드 -->
@@ -70,17 +73,76 @@
                 {% endfor %}
             </div>
             <div class="score-info">
-                {% if scores and scores[player] %}
-                    <p>족보: {{ scores[player][1] }}</p>
-                    <p>점수 계산: {{ scores[player][2] }} × {{ scores[player][3] }} = {{ scores[player][0] }}</p>
+                {% if scores and 'Player 1' in scores %}
+                    <p>족보: {{ scores['Player 1'][1] }}</p>
+                    <p>점수 계산: {{ scores['Player 1'][2] }} × {{ scores['Player 1'][3] }} = {{ scores['Player 1'][0] }}</p>
                 {% endif %}
-                {% if player == 'Computer' and current_turn and current_turn > 1 %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 컴퓨터 섹션을 항상 나중에 표시 -->
+        {% if 'Computer' in hands %}
+        <div class="player-section">
+            <h3>Computer</h3>
+            <div class="cards-container">
+                {% for card in hands['Computer'] %}
+                <div class="card" 
+                     data-index="{{ loop.index0 }}"
+                     data-player="Computer"
+                     data-rank="{{ card['rank'] }}"
+                     data-suit="{{ card['suit'] }}">
+                    <div class="card-inner">
+                        {% if card['rank'] in ['2', '3', '4', '5', '6', '7', '8', '9', '10'] %}
+                            <!-- 숫자 카드 -->
+                            <div class="card-top">
+                                <div class="small-suit {{ card['suit']|lower }}"></div>
+                            </div>
+                            <div class="card-center">
+                                <div class="big-number">{{ card['rank'] }}</div>
+                            </div>
+                            <div class="card-bottom">
+                                <div class="small-suit {{ card['suit']|lower }}" style="transform: rotate(180deg);"></div>
+                            </div>
+                        {% elif card['rank'] == 'Ace' %}
+                            <!-- 에이스 카드 -->
+                            <div class="card-top">
+                                <div class="rank-top">A</div>
+                            </div>
+                            <div class="card-center">
+                                <div class="big-suit {{ card['suit']|lower }}"></div>
+                            </div>
+                            <div class="card-bottom">
+                                <div class="rank-bottom">A</div>
+                            </div>
+                        {% else %}
+                            <!-- K, Q, J 카드 -->
+                            <div class="card-top">
+                                <div class="small-suit {{ card['suit']|lower }}"></div>
+                            </div>
+                            <div class="card-center">
+                                <div class="big-text">{{ card['rank'][0] }}</div>
+                            </div>
+                            <div class="card-bottom">
+                                <div class="small-suit {{ card['suit']|lower }}" style="transform: rotate(180deg);"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="score-info">
+                {% if scores and 'Computer' in scores %}
+                    <p>족보: {{ scores['Computer'][1] }}</p>
+                    <p>점수 계산: {{ scores['Computer'][2] }} × {{ scores['Computer'][3] }} = {{ scores['Computer'][0] }}</p>
+                {% endif %}
+                {% if current_turn and current_turn > 1 %}
                     <p class="ai-decision">
-                        {% if card_changes and card_changes['Computer'] and 
+                        {% if card_changes and 'Computer' in card_changes and 
                               (card_changes['Computer']['discarded'] or card_changes['Computer']['drawn']) %}
                             <span class="action-taken">
                                 컴퓨터가 카드를 교체했습니다:<br>
-                                {% if previous_scores and previous_scores['Computer'] %}
+                                {% if previous_scores and 'Computer' in previous_scores %}
                                     <span class="score-change-details">
                                         이전 족보: {{ previous_scores['Computer'][1] }} ({{ previous_scores['Computer'][0] }}점)<br>
                                         현재 족보: {{ scores['Computer'][1] }} ({{ scores['Computer'][0] }}점)
@@ -94,20 +156,32 @@
                 {% endif %}
             </div>
         </div>
-        {% endfor %}
+        {% endif %}
     </div>
     {% endif %}
 
     <!-- 카드 교체 및 턴 넘기기 -->
-    {% if hands and 'Player 1' in hands %}
     <div class="game-controls">
-        <form id="discardForm" method="post" action="{{ url_for('discard') }}" class="control-button">
-            <input type="hidden" name="discard" id="discardInput">
-            <button type="button" onclick="submitDiscard()" class="btn">카드 버리기</button>
-        </form>
-        <a href="{{ url_for('next_turn') }}" class="btn">턴 넘기기</a>
+        {% if winner is not none %}
+            <!-- 게임이 종료된 경우 새 게임 버튼만 표시 -->
+            <a href="{{ url_for('new_game') }}" class="btn">새 게임</a>
+            <a href="{{ url_for('index') }}" class="btn">메인으로</a>
+        {% elif current_turn is not none %}
+            <!-- 게임이 진행 중인 경우 게임 관련 버튼 표시 -->
+            <form id="discardForm" action="{{ url_for('discard_cards') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="discardInput" name="discard" value="">
+                <button type="button" class="btn" onclick="submitDiscard()" id="discardButton">
+                    선택한 카드 교체 (0/5)
+                </button>
+            </form>
+            <a href="{{ url_for('next_turn') }}" class="btn">턴 넘기기</a>
+        {% else %}
+            <!-- 게임이 시작되지 않은 경우 게임 시작 버튼 표시 -->
+            <a href="{{ url_for('start_game') }}" class="btn">게임 시작</a>
+            <a href="{{ url_for('index') }}" class="btn">메인으로</a>
+        {% endif %}
     </div>
-    {% endif %}
 
     <!-- 게임 결과 -->
     {% if winner is not none %}

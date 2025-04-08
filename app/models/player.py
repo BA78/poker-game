@@ -30,12 +30,23 @@ class Player:
         self.previous_score = self.score
         self.card_changes = {'discarded': [], 'drawn': []}
         
-        # 카드 버리기
-        for index in sorted(indices, reverse=True):
+        # 인덱스를 내림차순으로 정렬 (중요!)
+        sorted_indices = sorted(indices, reverse=True)
+        
+        # 선택된 카드만 버리기
+        discarded_cards = []
+        for index in sorted_indices:
             if 0 <= index < len(self.hand):
                 discarded_card = self.hand.pop(index)
+                discarded_cards.append(discarded_card)
                 self.card_changes['discarded'].append(discarded_card.to_dict())
+        
+        # 버린 카드 수만큼 새 카드 뽑기
+        new_cards = []
+        for _ in range(len(discarded_cards)):
+            if self.deck:  # 덱에 카드가 남아있는지 확인
                 new_card = self.deck.pop()
+                new_cards.append(new_card)
                 self.hand.append(new_card)
                 self.card_changes['drawn'].append(new_card.to_dict())
         

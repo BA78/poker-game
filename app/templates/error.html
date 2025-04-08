@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error-container">
+    <h2>오류가 발생했습니다</h2>
+    <div class="error-message">
+        {{ error }}
+    </div>
+    <div class="game-controls">
+        <a href="{{ url_for('index') }}" class="btn">메인으로 돌아가기</a>
+    </div>
+</div>
+{% endblock %}

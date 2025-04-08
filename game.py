@@ -246,31 +246,19 @@ class PokerGame:
 
     def _handle_computer_turn(self) -> None:
         """컴퓨터의 턴 처리"""
-        # 현재 점수를 이전 점수로 저장
-        self.previous_scores = {
-            'Computer': self.scores['Computer'],
-            'Player 1': self.scores['Player 1']
-        }
+        # 현재 턴이 유효한지 확인
+        if self.current_turn is None or 'Computer' not in self.players:
+            return
+        
+        computer = self.players['Computer']
+        ai = PokerAI(computer.hand)
+        indices_to_discard = ai.decide_cards_to_discard()
+        
+        # 카드 교체 로그 추가
+        print(f"컴퓨터가 버리는 카드 인덱스: {indices_to_discard}")
 
-        computer_hand = self.hands['Computer']
-        ai = PokerAI(computer_hand, self.players['Computer'])
-        cards_to_discard = ai.decide_cards_to_discard()
-
-        if cards_to_discard:
-            # 선택된 카드 버리기
-            for card in cards_to_discard:
-                computer_hand.remove(card)
-                new_card = self.players['Computer'].pop()
-                computer_hand.append(new_card)
-
-            # 핸드 정렬
-            computer_hand.sort(
-                key=lambda card: (RANKS.index(card['rank']), SUITS.index(card['suit'])),
-                reverse=True
-            )
-
-            # 카드를 교체했다면 무조건 새로운 점수로 업데이트
-            self.scores['Computer'] = self.calculate_score(computer_hand)
+        if indices_to_discard:
+            computer.discard_cards(indices_to_discard)
 
     def determine_winner(self) -> None:
         player_score = self.scores['Player 1'][0]

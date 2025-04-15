@@ -1,9 +1,10 @@
 """
 라우트 정의
 """
-from flask import render_template, request, redirect, url_for, session, g, current_app
+from flask import render_template, request, redirect, url_for, session, g, current_app, has_request_context
 from .models.game import Game
 import logging
+import traceback
 
 def register_routes(app):
     """라우트 등록"""
@@ -29,7 +30,7 @@ def register_routes(app):
             session['game'] = game.save_to_session()
             session.modified = True  # 세션 변경 명시적 알림
         except RuntimeError as e:
-            logger.warning(f"요청 컨텍스트 외부에서 game 저장 시도: {str(e)}")
+            logger.warning("요청 컨텍스트 외부에서 game 저장 시도\n%s", traceback.format_exc())
         except Exception as e:
             logger.error(f"게임 저장 오류: {str(e)}")
     
@@ -132,13 +133,18 @@ def register_routes(app):
             
     @app.teardown_appcontext
     def close_game(error):
-        """요청 종료 시 실행"""
+        if not has_request_context():
+            return
+
+        if request.path.startswith('/static'):
+            return  # 정적 자원에 대해선 저장 로직 건너뜀
+
         try:
-            if hasattr(g, 'game') and 'game' in session:
+            if hasattr(g, 'game'):
                 session['game'] = g.game.save_to_session()
-        except RuntimeError:
-            # 요청 컨텍스트 외부에서 호출될 때 로깅만 하고 넘어감
-            app.logger.warning("요청 컨텍스트 외부에서 game 저장 시도") 
+                session.modified = True
+        except Exception as e:
+            app.logger.warning("game 저장 중 오류: %s", e)
 
     @app.route('/new_game')
     def new_game():
